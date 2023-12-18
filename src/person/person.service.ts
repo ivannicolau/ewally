@@ -1,36 +1,37 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Person, RelationsData } from 'src/utils/people.dto';
+import { Person } from 'src/utils/people.dto';
+import { NewPersonDTO } from './dto/newPerson.dto';
+import { people } from 'src/general/app.module';
 
 @Injectable()
 export class PersonService {
-  private readonly people: RelationsData;
+	private readonly people = people;
 
-  createPerson(cpf: string, name: string) {
-    const empty: Person[] = [];
-    if (this.people.exists(cpf)) {
-      throw new HttpException(
-        `Essa pessoa já está registrada`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+	createPerson(newPerson: NewPersonDTO) {
+		if (this.people.validator(newPerson.cpf)) {
+			if (this.people.alreadyHere(newPerson.cpf)) {
+				throw new HttpException(
+					`Essa pessoa já está registrada`,
+					HttpStatus.BAD_REQUEST,
+				);
+			}
 
-    this.validator(cpf);
+			const empty: Person[] = [];
+			const personToInsert: Person = {
+				name: newPerson.name,
+				cpf: newPerson.cpf,
+				relation: empty,
+			};
+			this.people.createPerson(personToInsert);
+			return;
+		}
+	}
 
-    const newPerson: Person = { cpf: cpf, name: name, relation: empty };
-    this.people.createPerson(newPerson);
-  }
-
-  private validator(cpf: string) {
-    if (cpf.replace(/[^\d.-]+/g, '').length != 11) {
-      throw new HttpException(`CPF inválido`, HttpStatus.BAD_REQUEST);
-    }
-    return true;
-  }
-
-  public getPerson(cpf: string) {
-    if (this.people.exists(cpf)) {
-      return this.people.findPerson(cpf);
-    }
-    throw new HttpException(`Essa pessoa não existe`, HttpStatus.NOT_FOUND);
-  }
+	public getPerson(cpf: string) {
+		if (this.people.alreadyHere(cpf)) {
+			const person: Person = this.people.findPerson(cpf);
+			return { cpf: person.cpf, name: person.name };
+		}
+		throw new HttpException(`Essa pessoa não existe`, HttpStatus.NOT_FOUND);
+	}
 }

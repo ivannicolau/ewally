@@ -1,22 +1,34 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { RelationsData } from 'src/utils/people.dto';
+import { people } from 'src/general/app.module';
+import { RelationsDTO } from './dto/relations.dto';
 
 @Injectable()
 export class RelationsService {
-  private readonly relationFuncs: RelationsData;
+	private readonly relationFuncs = people;
 
-  addRelation(primeCpf: string, secondCpf: string) {
-    if (
-      this.relationFuncs.exists(primeCpf) &&
-      this.relationFuncs.exists(secondCpf)
-    ) {
-      const prime = this.relationFuncs.findPerson(primeCpf);
-      const second = this.relationFuncs.findPerson(secondCpf);
-      prime.relation.push(second);
-      second.relation.push(prime);
-      return;
-    }
+	addRelation(relations: RelationsDTO) {
+		if (
+			this.relationFuncs.alreadyHere(relations.primeCpf) &&
+			this.relationFuncs.alreadyHere(relations.secondCpf)
+		) {
+			this.relationFuncs.addRelation(
+				relations.primeCpf,
+				relations.secondCpf,
+			);
+			return;
+		}
 
-    throw new HttpException(`Pessoa não encontrada`, HttpStatus.NOT_FOUND);
-  }
+		throw new HttpException(`Pessoa não encontrada`, HttpStatus.NOT_FOUND);
+	}
+
+	getRecomendations(cpf: string): string[] {
+		const person = people.findPerson(cpf);
+		if (person) {
+			return people.recomendations(person);
+		}
+		throw new HttpException(
+			`Erro ao buscar recomendações`,
+			HttpStatus.INTERNAL_SERVER_ERROR,
+		);
+	}
 }
