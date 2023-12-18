@@ -28,7 +28,7 @@ export class RelationsData {
 		throw new HttpException(`Essa pessoa não existe`, HttpStatus.NOT_FOUND);
 	}
 
-	public eraseAll() {
+	public eraseAll(): void {
 		const newRelations: Person[] = [];
 		delete this.relations;
 		this.relations = newRelations;

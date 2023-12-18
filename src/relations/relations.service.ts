@@ -6,7 +6,7 @@ import { RelationsDTO } from './dto/relations.dto';
 export class RelationsService {
 	private readonly relationFuncs = people;
 
-	addRelation(relations: RelationsDTO) {
+	addRelation(relations: RelationsDTO): void {
 		if (
 			this.relationFuncs.alreadyHere(relations.primeCpf) &&
 			this.relationFuncs.alreadyHere(relations.secondCpf)
